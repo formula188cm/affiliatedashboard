@@ -10,8 +10,26 @@ const isProduction = process.env.VERCEL === "1" || process.env.NODE_ENV === "pro
 // GET - Fetch all influencers
 export async function GET() {
   try {
-    // In production, use Google Sheets
-    if (isProduction || process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
+    // In production, MUST use Google Sheets (file system doesn't work on Vercel)
+    if (isProduction) {
+      if (!process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
+        // Return empty array with warning instead of error (so page still loads)
+        console.warn("NEXT_PUBLIC_APPS_SCRIPT_URL not configured in production")
+        return Response.json([])
+      }
+
+      try {
+        const influencers = await fetchInfluencersFromSheet()
+        return Response.json(influencers)
+      } catch (error: any) {
+        console.error("Failed to fetch from Google Sheets:", error)
+        // Return empty array so page doesn't break
+        return Response.json([])
+      }
+    }
+
+    // Local development: Try Google Sheets first if configured
+    if (process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
       try {
         const influencers = await fetchInfluencersFromSheet()
         return Response.json(influencers)
@@ -21,7 +39,7 @@ export async function GET() {
       }
     }
 
-    // Fallback to file system (local development)
+    // Fallback to file system (local development only)
     try {
       const data = await readFile(INFLUENCERS_FILE, "utf-8")
       const influencers = JSON.parse(data)
@@ -35,7 +53,8 @@ export async function GET() {
     }
   } catch (error) {
     console.error("Failed to read influencers:", error)
-    return Response.json({ error: "Failed to read influencers" }, { status: 500 })
+    // Return empty array instead of error so page doesn't break
+    return Response.json([])
   }
 }
 
@@ -69,8 +88,18 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     }
 
-    // In production, use Google Sheets
-    if (isProduction || process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
+    // In production, MUST use Google Sheets (file system doesn't work on Vercel)
+    if (isProduction) {
+      if (!process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
+        return Response.json(
+          {
+            error: "Configuration Error: NEXT_PUBLIC_APPS_SCRIPT_URL is required in production. Please set it in Vercel environment variables. See VERCEL_SETUP.md for instructions.",
+            setupRequired: true,
+          },
+          { status: 500 }
+        )
+      }
+
       try {
         // Check for duplicates first
         const existingInfluencers = await fetchInfluencersFromSheet()
@@ -86,11 +115,34 @@ export async function POST(request: Request) {
         return Response.json(newInfluencer, { status: 201 })
       } catch (error: any) {
         console.error("Failed to save to Google Sheets:", error)
-        // Fallback to file if Google Sheets fails
+        return Response.json(
+          {
+            error: `Failed to save influencer: ${error.message || "Please check your Apps Script configuration"}`,
+            setupRequired: true,
+          },
+          { status: 500 }
+        )
       }
     }
 
-    // Fallback to file system (local development)
+    // Local development: Use Google Sheets if configured, otherwise file system
+    if (process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
+      try {
+        const existingInfluencers = await fetchInfluencersFromSheet()
+        const existingCode = existingInfluencers.find(
+          (inf) => inf.referralCode.toUpperCase() === cleanReferralCode
+        )
+        if (existingCode) {
+          return Response.json({ error: "Referral code already exists" }, { status: 400 })
+        }
+        await saveInfluencerToSheet(newInfluencer)
+        return Response.json(newInfluencer, { status: 201 })
+      } catch (error: any) {
+        console.error("Failed to save to Google Sheets, using file fallback:", error)
+      }
+    }
+
+    // Fallback to file system (local development only)
     try {
       let influencers = []
       try {

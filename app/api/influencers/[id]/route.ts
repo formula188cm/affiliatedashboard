@@ -21,14 +21,40 @@ export async function DELETE(
       return Response.json({ error: "Influencer ID is required" }, { status: 400 })
     }
 
-    // In production, use Google Sheets
-    if (isProduction || process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
+    // In production, MUST use Google Sheets (file system doesn't work on Vercel)
+    if (isProduction) {
+      if (!process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
+        return Response.json(
+          {
+            error: "Configuration Error: NEXT_PUBLIC_APPS_SCRIPT_URL is required in production. Please set it in Vercel environment variables.",
+            setupRequired: true,
+          },
+          { status: 500 }
+        )
+      }
+
       try {
         await deleteInfluencerFromSheet(id)
         return Response.json({ success: true })
       } catch (error: any) {
         console.error("Failed to delete from Google Sheets:", error)
-        // Fallback to file if Google Sheets fails
+        return Response.json(
+          {
+            error: `Failed to delete influencer: ${error.message || "Please check your Apps Script configuration"}`,
+            setupRequired: true,
+          },
+          { status: 500 }
+        )
+      }
+    }
+
+    // Local development: Use Google Sheets if configured
+    if (process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
+      try {
+        await deleteInfluencerFromSheet(id)
+        return Response.json({ success: true })
+      } catch (error: any) {
+        console.error("Failed to delete from Google Sheets, using file fallback:", error)
       }
     }
 

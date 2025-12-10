@@ -127,12 +127,24 @@ export default function InfluencersPage() {
 
       {error && (
         <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-200">
-          <p className="font-semibold mb-1">Error:</p>
-          <p>{error}</p>
-          {error.includes("configuration") && (
-            <p className="mt-2 text-xs">
-              Make sure NEXT_PUBLIC_APPS_SCRIPT_URL is set in your environment variables.
-            </p>
+          <p className="font-semibold mb-2">Error:</p>
+          <p className="mb-3">{error}</p>
+          {(error.includes("Configuration Error") || error.includes("setupRequired") || error.includes("NEXT_PUBLIC_APPS_SCRIPT_URL")) && (
+            <div className="bg-white p-4 rounded border border-red-300 mt-3">
+              <p className="font-semibold text-sm mb-2">⚠️ Setup Required for Production</p>
+              <p className="text-xs mb-3">
+                Your website is deployed on Vercel, which requires Google Sheets for data storage. 
+                File system storage doesn't work on Vercel.
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-xs mb-3">
+                <li>Set up Google Apps Script (see <code className="bg-gray-100 px-1 rounded">VERCEL_SETUP.md</code>)</li>
+                <li>Add <code className="bg-gray-100 px-1 rounded">NEXT_PUBLIC_APPS_SCRIPT_URL</code> to Vercel environment variables</li>
+                <li>Redeploy your application</li>
+              </ol>
+              <p className="text-xs text-muted-foreground">
+                <strong>Quick Setup:</strong> Go to Vercel → Settings → Environment Variables → Add <code className="bg-gray-100 px-1 rounded">NEXT_PUBLIC_APPS_SCRIPT_URL</code>
+              </p>
+            </div>
           )}
         </div>
       )}
