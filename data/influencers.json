@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1765123574188",
+    "name": "adarsh",
+    "referralCode": "HAWA121",
+    "commissionPercentage": 10,
+    "createdAt": "2025-12-07T16:06:14.188Z"
+  },
+  {
+    "id": "1765168590568",
+    "name": "fds",
+    "referralCode": "HW11",
+    "commissionPercentage": 10,
+    "createdAt": "2025-12-08T04:36:30.568Z"
+  },
+  {
+    "id": "1765194653129",
+    "name": "fds",
+    "referralCode": "D121",
+    "commissionPercentage": 10,
+    "createdAt": "2025-12-08T11:50:53.129Z"
+  },
+  {
+    "id": "1765250098516",
+    "name": "ekta",
+    "referralCode": "EKTA143",
+    "commissionPercentage": 10,
+    "createdAt": "2025-12-09T03:14:58.516Z"
+  }
+]
