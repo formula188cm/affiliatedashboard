@@ -281,7 +281,6 @@ export default function OrdersPage() {
           </div>
 
           <div className="overflow-x-auto -mx-6 px-6">
-            <OrdersTable orders={filteredOrders} onApprove={handleApprove} onReject={handleReject} />
             <OrdersTable
               orders={filteredOrders}
               onApprove={handleApprove}

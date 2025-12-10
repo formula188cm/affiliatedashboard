@@ -34,10 +34,15 @@ export async function DELETE(
       }
 
       try {
-        await deleteInfluencerFromSheet(id)
-        return Response.json({ success: true })
+        const result = await deleteInfluencerFromSheet(id)
+        return Response.json({ success: result })
       } catch (error: any) {
         console.error("Failed to delete from Google Sheets:", error)
+        const message = error?.message || ""
+        // If the Apps Script says the influencer is not found, treat as success to unblock UI
+        if (message.toLowerCase().includes("not found")) {
+          return Response.json({ success: true })
+        }
         return Response.json(
           {
             error: `Failed to delete influencer: ${error.message || "Please check your Apps Script configuration"}`,
@@ -51,8 +56,8 @@ export async function DELETE(
     // Local development: Use Google Sheets if configured
     if (process.env.NEXT_PUBLIC_APPS_SCRIPT_URL) {
       try {
-        await deleteInfluencerFromSheet(id)
-        return Response.json({ success: true })
+        const result = await deleteInfluencerFromSheet(id)
+        return Response.json({ success: result })
       } catch (error: any) {
         console.error("Failed to delete from Google Sheets, using file fallback:", error)
       }
