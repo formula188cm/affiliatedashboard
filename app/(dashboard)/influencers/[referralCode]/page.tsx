@@ -46,7 +46,11 @@ export default function InfluencerDetailPage() {
 
         // Fetch orders from Google Sheets public JSON feed
         const sheetId = process.env.NEXT_PUBLIC_SHEET_ID
-        if (!sheetId) throw new Error("Sheet ID not configured")
+        if (!sheetId || sheetId.trim() === "") {
+          throw new Error(
+            "Sheet ID not configured. Please add NEXT_PUBLIC_SHEET_ID to your .env.local file."
+          )
+        }
 
         const response = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=SELECT *`)
         

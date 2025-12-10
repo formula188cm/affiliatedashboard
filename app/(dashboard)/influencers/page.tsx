@@ -43,32 +43,65 @@ export default function InfluencersPage() {
     commissionPercentage: number
   }) => {
     try {
+      setError("")
       const response = await fetch("/api/influencers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      if (!response.ok) throw new Error("Failed to add influencer")
-      const newInfluencer = await response.json()
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to add influencer")
+      }
+      
+      const newInfluencer = result
       setInfluencers([...influencers, newInfluencer])
       setError("")
-    } catch (err) {
-      console.error("[v0] Failed to add influencer:", err)
-      setError("Failed to add influencer")
+      
+      // Reload influencers to ensure sync
+      const refreshResponse = await fetch("/api/influencers")
+      if (refreshResponse.ok) {
+        const refreshed = await refreshResponse.json()
+        setInfluencers(refreshed)
+      }
+    } catch (err: any) {
+      console.error("Failed to add influencer:", err)
+      setError(err.message || "Failed to add influencer. Please check your configuration.")
     }
   }
 
   const handleDeleteInfluencer = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this influencer?")) {
+      return
+    }
+
     try {
+      setError("")
       const response = await fetch(`/api/influencers/${id}`, {
         method: "DELETE",
       })
-      if (!response.ok) throw new Error("Failed to delete influencer")
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete influencer")
+      }
+      
+      // Optimistically update UI
       setInfluencers(influencers.filter((inf) => inf.id !== id))
       setError("")
-    } catch (err) {
-      console.error("[v0] Failed to delete influencer:", err)
-      setError("Failed to delete influencer")
+      
+      // Reload influencers to ensure sync
+      const refreshResponse = await fetch("/api/influencers")
+      if (refreshResponse.ok) {
+        const refreshed = await refreshResponse.json()
+        setInfluencers(refreshed)
+      }
+    } catch (err: any) {
+      console.error("Failed to delete influencer:", err)
+      setError(err.message || "Failed to delete influencer. Please check your configuration.")
     }
   }
 
@@ -93,7 +126,15 @@ export default function InfluencersPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-200">{error}</div>
+        <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-200">
+          <p className="font-semibold mb-1">Error:</p>
+          <p>{error}</p>
+          {error.includes("configuration") && (
+            <p className="mt-2 text-xs">
+              Make sure NEXT_PUBLIC_APPS_SCRIPT_URL is set in your environment variables.
+            </p>
+          )}
+        </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

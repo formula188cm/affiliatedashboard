@@ -28,8 +28,11 @@ export default function OrdersPage() {
     try {
       setError("")
       const sheetId = process.env.NEXT_PUBLIC_SHEET_ID
-      if (!sheetId) {
-        throw new Error("Sheet ID not configured. Check your .env.local file.")
+      if (!sheetId || sheetId.trim() === "") {
+        throw new Error(
+          "Sheet ID not configured. Please add NEXT_PUBLIC_SHEET_ID to your .env.local file. " +
+          "Get your Sheet ID from the Google Sheets URL: https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit"
+        )
       }
 
       console.log("Fetching orders from sheet:", sheetId)
@@ -209,13 +212,29 @@ export default function OrdersPage() {
 
       {error && (
         <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-200">
-          <p className="font-semibold mb-1">Error loading orders:</p>
-          <p>{error}</p>
-          <p className="mt-2 text-xs">
-            Sheet ID: {process.env.NEXT_PUBLIC_SHEET_ID ? "✅ Configured" : "❌ Missing"}
-          </p>
-          <p className="text-xs">
-            Check browser console (F12) for detailed error messages.
+          <p className="font-semibold mb-2">Error loading orders:</p>
+          <p className="mb-3">{error}</p>
+          
+          {!process.env.NEXT_PUBLIC_SHEET_ID && (
+            <div className="bg-white p-3 rounded border border-red-300 mt-3">
+              <p className="font-semibold text-xs mb-2">How to fix:</p>
+              <ol className="list-decimal list-inside space-y-1 text-xs">
+                <li>Open your Google Sheet</li>
+                <li>Copy the Sheet ID from the URL:
+                  <br />
+                  <code className="bg-gray-100 px-1 rounded text-xs">
+                    https://docs.google.com/spreadsheets/d/<strong>YOUR_SHEET_ID_HERE</strong>/edit
+                  </code>
+                </li>
+                <li>Add to .env.local: <code className="bg-gray-100 px-1 rounded">NEXT_PUBLIC_SHEET_ID=YOUR_SHEET_ID_HERE</code></li>
+                <li>Restart your dev server: <code className="bg-gray-100 px-1 rounded">npm run dev</code></li>
+                <li>Make sure the sheet is publicly viewable (Share → Anyone with the link can view)</li>
+              </ol>
+            </div>
+          )}
+          
+          <p className="mt-3 text-xs">
+            Sheet ID Status: {process.env.NEXT_PUBLIC_SHEET_ID ? "✅ Configured" : "❌ Missing"}
           </p>
         </div>
       )}
