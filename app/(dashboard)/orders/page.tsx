@@ -23,6 +23,7 @@ export default function OrdersPage() {
   const [error, setError] = useState("")
   const [searchCode, setSearchCode] = useState("")
   const [refreshing, setRefreshing] = useState(false)
+  const [pendingOrderIds, setPendingOrderIds] = useState<Set<string>>(new Set())
 
   const loadOrders = async () => {
     try {
@@ -145,6 +146,7 @@ export default function OrdersPage() {
   }, [orders, searchCode])
 
   const handleStatusChange = useCallback(async (orderId: string, newStatus: string) => {
+    setPendingOrderIds((prev) => new Set(prev).add(orderId))
     try {
       const appsScriptUrl = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL
       if (!appsScriptUrl) throw new Error("Apps Script URL not configured")
@@ -167,6 +169,12 @@ export default function OrdersPage() {
     } catch (err) {
       console.error("[v0] Failed to update order:", err)
       setError("Failed to update order status")
+    } finally {
+      setPendingOrderIds((prev) => {
+        const next = new Set(prev)
+        next.delete(orderId)
+        return next
+      })
     }
   }, [])
 
@@ -274,6 +282,12 @@ export default function OrdersPage() {
 
           <div className="overflow-x-auto -mx-6 px-6">
             <OrdersTable orders={filteredOrders} onApprove={handleApprove} onReject={handleReject} />
+            <OrdersTable
+              orders={filteredOrders}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              pendingIds={pendingOrderIds}
+            />
           </div>
         </CardContent>
       </Card>

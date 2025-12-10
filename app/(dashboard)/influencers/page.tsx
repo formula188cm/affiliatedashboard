@@ -17,6 +17,8 @@ export default function InfluencersPage() {
   const [influencers, setInfluencers] = useState<Influencer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [adding, setAdding] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     const loadInfluencers = async () => {
@@ -42,6 +44,7 @@ export default function InfluencersPage() {
     referralCode: string
     commissionPercentage: number
   }) => {
+    setAdding(true)
     try {
       setError("")
       const response = await fetch("/api/influencers", {
@@ -69,13 +72,14 @@ export default function InfluencersPage() {
     } catch (err: any) {
       console.error("Failed to add influencer:", err)
       setError(err.message || "Failed to add influencer. Please check your configuration.")
+    } finally {
+      setAdding(false)
     }
   }
 
   const handleDeleteInfluencer = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this influencer?")) {
-      return
-    }
+    if (!confirm("Are you sure you want to delete this influencer?")) return
+    setDeletingId(id)
 
     try {
       setError("")
@@ -102,6 +106,8 @@ export default function InfluencersPage() {
     } catch (err: any) {
       console.error("Failed to delete influencer:", err)
       setError(err.message || "Failed to delete influencer. Please check your configuration.")
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -156,7 +162,7 @@ export default function InfluencersPage() {
               <CardTitle>Add Influencer</CardTitle>
             </CardHeader>
             <CardContent>
-              <InfluencerForm onSubmit={handleAddInfluencer} />
+              <InfluencerForm onSubmit={handleAddInfluencer} isSubmitting={adding} />
             </CardContent>
           </Card>
         </div>
@@ -167,7 +173,11 @@ export default function InfluencersPage() {
               <CardTitle>Influencer List</CardTitle>
             </CardHeader>
             <CardContent>
-              <InfluencerTable influencers={influencers} onDelete={handleDeleteInfluencer} />
+              <InfluencerTable
+                influencers={influencers}
+                onDelete={handleDeleteInfluencer}
+                deletingId={deletingId}
+              />
             </CardContent>
           </Card>
         </div>

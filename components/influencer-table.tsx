@@ -16,9 +16,10 @@ interface Influencer {
 interface InfluencerTableProps {
   influencers: Influencer[]
   onDelete?: (id: string) => void
+  deletingId?: string | null
 }
 
-export function InfluencerTable({ influencers, onDelete }: InfluencerTableProps) {
+export function InfluencerTable({ influencers, onDelete, deletingId }: InfluencerTableProps) {
   const router = useRouter()
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -133,8 +134,9 @@ export function InfluencerTable({ influencers, onDelete }: InfluencerTableProps)
                       }}
                       className="hover:bg-red-100 hover:text-red-700"
                       title="Delete influencer"
+                      disabled={deletingId === influencer.id}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className={`w-4 h-4 ${deletingId === influencer.id ? "animate-pulse" : ""}`} />
                     </Button>
                   </div>
                 </td>

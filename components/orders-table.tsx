@@ -17,9 +17,10 @@ interface OrdersTableProps {
   orders: Order[]
   onApprove: (orderId: string) => Promise<void>
   onReject: (orderId: string) => Promise<void>
+  pendingIds?: Set<string>
 }
 
-export function OrdersTable({ orders, onApprove, onReject }: OrdersTableProps) {
+export function OrdersTable({ orders, onApprove, onReject, pendingIds }: OrdersTableProps) {
   const getStatusBadge = (status: string) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-800 border border-yellow-300",
@@ -73,6 +74,7 @@ export function OrdersTable({ orders, onApprove, onReject }: OrdersTableProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => onApprove(order.id)}
+                      disabled={pendingIds?.has(order.id)}
                       className={
                         order.status === "completed"
                           ? "hover:bg-green-100 hover:text-green-700 bg-green-50 text-green-700"
@@ -86,6 +88,7 @@ export function OrdersTable({ orders, onApprove, onReject }: OrdersTableProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => onReject(order.id)}
+                      disabled={pendingIds?.has(order.id)}
                       className={
                         order.status === "rejected"
                           ? "hover:bg-red-100 hover:text-red-700 bg-red-50 text-red-700"

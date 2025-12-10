@@ -8,9 +8,10 @@ import { Plus } from "lucide-react"
 
 interface InfluencerFormProps {
   onSubmit: (data: { name: string; referralCode: string; commissionPercentage: number }) => void
+  isSubmitting?: boolean
 }
 
-export function InfluencerForm({ onSubmit }: InfluencerFormProps) {
+export function InfluencerForm({ onSubmit, isSubmitting = false }: InfluencerFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     referralCode: "",
@@ -77,9 +78,9 @@ export function InfluencerForm({ onSubmit }: InfluencerFormProps) {
           onChange={(e) => setFormData({ ...formData, commissionPercentage: Number(e.target.value) })}
         />
       </div>
-      <Button type="submit" className="w-full gap-2">
+      <Button type="submit" className="w-full gap-2" disabled={isSubmitting}>
         <Plus className="w-4 h-4" />
-        Add Influencer
+        {isSubmitting ? "Adding..." : "Add Influencer"}
       </Button>
     </form>
   )
